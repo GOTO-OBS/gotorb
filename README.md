@@ -16,11 +16,37 @@ Installation and setup
   (Requires a valid entry in your `~/.pgpass` file to connect to the `gotophoto` database 
   using these parameters.)
   
+Pre-built validation datasets
+---------------------
+To enable easy testing of the `gotorb` code without access to internal GOTO data, we bundle a pre-built dataset.
+This is roughly 10% of the classifier test set, bundled as a `hickle` file for ease of use.
+This file can be downloaded from 
+[https://files.warwick.ac.uk/tkillestein/browse/gotorb_validation_data
+](https://files.warwick.ac.uk/tkillestein/browse/gotorb_validation_data).  
+Alternatively, run `download_valdata.sh` from the package base directory to automatically download the required data.
+Don't forget to `chmod u+x` first!
+
+To extract the data components from the `hickle` within Python, use the below command.
+```
+stamps, meta = hickle.load("./datapack.hkl")
+```  
+The sample model can be loaded with the usual `tf.keras.models.load_model()` function.
+A testing notebook to reproduce some of the figures in the accompanying paper is available in `notebooks/` -- the sample
+data and model should be copied to the `data/` folder for use. The download script will do this automatically.
+  
 Creating labelled dataset
 -------------------------
-
 Our labelled dataset consists of a `csv` file with labels and some meta information on the detection, as well as
-a `hdf5` file containing an array of image stamps for each detection in the `csv` file. This must be done from a 
+a `hdf5` file containing an array of image stamps for each detection in the `csv` file. 
+
+##### Adapting the code to your own data source:
+The key elements that need to be adjusted are `label_data.get_images()` and `label_data.get_individual_images()`
+functions, and the `*_IMAGE_EXT` variables that set which FITS HDUs to parse. Some minor tweaks may also be needed
+to the dataframe columns referenced depending on the way your data is laid out. More information about the functions
+above can be found in the docstrings.
+
+##### Generating own datasets (with gotoDB/fileserver access):
+This must be done from a 
 machine which can see the processed fits files of `gotophoto` (i.e. can see `/export/gotodata2/` etc.)
 
 If we are using the offline minor planet checking by `pympc` we first need to download the catalogue so we can 
@@ -32,8 +58,8 @@ pympc.update_catalogue()
 
 However, the above is not required for the default online checker, which uses 
 [SkyBoT](http://vo.imcce.fr/webservices/skybot/).  
-**Note**: do not use excessively, particularly with high thread counts (>10), as you will be throttled, and eventually blocked!
-
+**Note**: do not use excessively, particularly with high thread counts (>10), as you will be throttled, 
+and eventually blocked!
 
 Then make our labelled data:
 ```
@@ -102,16 +128,12 @@ in Jupyter notebook form for ease of visualisation.
 
 Visualising results
 ------------------
-
-A preliminary script for eyeballing data stamps, their labels and the score from the trained model (and the old 
-Random Forest classifier) is available with the `eyeball` module. This script can also be used to label new and re-label
-existing datasets.
-
-The `visualise` module evaluates a given model on an image, and can be used to run the classifier on a given image set.
-This generates a HTML summary page with score and posterior information, and brings in the RF and CNN scores from 
-existing classifiers.
-This provides a useful sanity check that the classifier is performing optimally, and allows the developer to spot any
-problems prior to deployment.
+The `visualise` module evaluates a given model on an image, and generates a HTML summary page with score and 
+posterior information. If GOTO image data is being used this can also bring in the RF and CNN scores from 
+existing classifiers for easy comparisons. This provides a useful sanity check that the classifier is performing 
+optimally, and allows the developer to spot any problems prior to deployment.   
+**NB:** this was developed to work specifically with GOTO image data, so will require some adaptation to work 
+with other formats
 
 New: Bayesian Neural Networks
 ----------------------

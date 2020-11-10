@@ -1,7 +1,8 @@
 setuptools>=41.0.0
 wheel~=0.35
 tensorflow==2.1.0
-git+https://github.com/GOTO-OBS/catsHTM.git#egg=catsHTM # needed for fixed catsHTM
+# git+https://github.com/GOTO-OBS/catsHTM.git#egg=catsHTM # needed for fixed catsHTM
+catsHTM==0.1.16
 absl-py==0.8.0
 asn1crypto==1.0.0
 astor==0.8.0

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='gotorb',
-    version='0.8',
+    version='1.0',
     author='Thomas Killestein',
     description='create labelled datasets and train models to distinguish real/bogus detections',
     packages=['gotorb'],
@@ -21,7 +21,8 @@ setuptools.setup(
         "pympc==0.6.1",
         "python-decouple==3.1",
         "matplotlib==3.1.1",
-        "keras-tuner~=1.0.0"
+        "keras-tuner~=1.0.0",
+        "h5py==2.10.0"
     ],
     license='GNU General Public License v3 (GPLv3)',
     long_description=long_description,
