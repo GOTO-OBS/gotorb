@@ -2,10 +2,14 @@ from contextlib import contextmanager
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
 import psycopg2
 import tables
+from astropy.io import fits
 from decouple import config
 from scipy.stats import truncnorm
+
+from src.gotorb.label_data import get_individual_images, _get_stamps
 
 
 def get_timestamp_str():
@@ -120,3 +124,52 @@ def swap_dataloc(filepath):
     if "gotodata3" in filepath:
         return filepath.replace("gotodata3", "gotodata2")
 
+
+def get_candidate_data(candidateid, stampsize):
+    print('creating stamps for candidate id {}'.format(candidateid))
+    query = ("select * from candidate join image on candidate.image_id = image.id "
+             "where candidate.id = %s")
+    with gotophoto_connection() as conn:
+        row = pd.read_sql(query, conn, params=(candidateid,))
+        if len(row) != 1:
+            print("Got {} results for candidate id {}".format(len(row), candidateid))
+            return
+    row = row.iloc[0]
+    fits_filepath = work_to_storage_filepath(row.filepath)
+    try:
+        fits_file = fits.open(fits_filepath)
+    except FileNotFoundError:
+        try:
+            fits_file = fits.open(fits_filepath.replace("gotodata2", "gotodata3"))
+        except FileNotFoundError:
+            print("couldn't find {}".format(fits_filepath))
+            return
+
+    indiv_images_df = get_individual_images(row.relatedimage)
+    try:
+        indiv_fits_files = [fits.open(work_to_storage_filepath(row.filepath)) for _, row in indiv_images_df.iterrows()]
+    except FileNotFoundError:
+        try:
+            indiv_fits_files = [fits.open(work_to_storage_filepath(row.filepath).replace("gotodata2", "gotodata3"))
+                                for _, row in indiv_images_df.iterrows()]
+        except FileNotFoundError:
+            print("couldn't find an individual file for {}".format(row.filepath))
+            return
+
+    stamps = _get_stamps(fits_file, row.ra, row.dec, stampsize, indiv_fits_files)
+    label = pd.Series(dict(
+        image_id=row.image_id,
+        x=row.x,
+        y=row.y,
+        ra=row.ra,
+        dec=row.dec,
+        mag=row.mag,
+        fwhm=row.fwhm,
+        index=candidateid,
+        realbogus=row.realbogus,
+        fits_filepath=fits_filepath,
+        ut=int(row.instrument[-1]),
+        ncoadd=len(indiv_fits_files),
+        label=-1  # unknown
+    ))
+    return label, stamps
