@@ -22,15 +22,16 @@ To enable easy testing of the `gotorb` code without access to internal GOTO data
 This is roughly 10% of the classifier test set, bundled as a `hickle` file for ease of use.
 This file can be downloaded from 
 [https://files.warwick.ac.uk/tkillestein/browse/gotorb_validation_data
-](https://files.warwick.ac.uk/tkillestein/browse/gotorb_validation_data).
+](https://files.warwick.ac.uk/tkillestein/browse/gotorb_validation_data).  
+Alternatively, run `download_valdata.sh` from the package base directory to automatically download the required data
 
-To extract the data components from the `hickle`, use the below command.
+To extract the data components from the `hickle` within Python, use the below command.
 ```
 stamps, meta = hickle.load("./datapack.hkl")
 ```  
 The sample model can be loaded with the usual `tf.keras.models.load_model()` function.
 A testing notebook to reproduce some of the figures in the accompanying paper is available in `notebooks/` -- the sample
-data and model should be copied to the `notebooks` folder for use.
+data and model should be copied to the `data/` folder for use.
   
 Creating labelled dataset
 -------------------------
@@ -39,7 +40,7 @@ a `hdf5` file containing an array of image stamps for each detection in the `csv
 
 ##### Adapting the code to your own data source:
 The key elements that need to be adjusted are `label_data.get_images()` and `label_data.get_individual_images()`
-functions, and the `*_IMAGE_EXT` variables that set which FITS HDUs to look at. Some minor tweaks may also be needed
+functions, and the `*_IMAGE_EXT` variables that set which FITS HDUs to parse. Some minor tweaks may also be needed
 to the dataframe columns referenced depending on the way your data is laid out. More information about the functions
 above can be found in the docstrings.
 
