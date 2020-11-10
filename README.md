@@ -23,7 +23,8 @@ This is roughly 10% of the classifier test set, bundled as a `hickle` file for e
 This file can be downloaded from 
 [https://files.warwick.ac.uk/tkillestein/browse/gotorb_validation_data
 ](https://files.warwick.ac.uk/tkillestein/browse/gotorb_validation_data).  
-Alternatively, run `download_valdata.sh` from the package base directory to automatically download the required data
+Alternatively, run `download_valdata.sh` from the package base directory to automatically download the required data.
+Don't forget to `chmod u+x` first!
 
 To extract the data components from the `hickle` within Python, use the below command.
 ```
@@ -31,7 +32,7 @@ stamps, meta = hickle.load("./datapack.hkl")
 ```  
 The sample model can be loaded with the usual `tf.keras.models.load_model()` function.
 A testing notebook to reproduce some of the figures in the accompanying paper is available in `notebooks/` -- the sample
-data and model should be copied to the `data/` folder for use.
+data and model should be copied to the `data/` folder for use. The download script will do this automatically.
   
 Creating labelled dataset
 -------------------------
@@ -127,16 +128,12 @@ in Jupyter notebook form for ease of visualisation.
 
 Visualising results
 ------------------
-
-A preliminary script for eyeballing data stamps, their labels and the score from the trained model (and the old 
-Random Forest classifier) is available with the `eyeball` module. This script can also be used to label new and re-label
-existing datasets.
-
-The `visualise` module evaluates a given model on an image, and can be used to run the classifier on a given image set.
-This generates a HTML summary page with score and posterior information, and brings in the RF and CNN scores from 
-existing classifiers.
-This provides a useful sanity check that the classifier is performing optimally, and allows the developer to spot any
-problems prior to deployment.
+The `visualise` module evaluates a given model on an image, and generates a HTML summary page with score and 
+posterior information. If GOTO image data is being used this can also bring in the RF and CNN scores from 
+existing classifiers for easy comparisons. This provides a useful sanity check that the classifier is performing 
+optimally, and allows the developer to spot any problems prior to deployment.   
+**NB:** this was developed to work specifically with GOTO image data, so will require some adaptation to work 
+with other formats
 
 New: Bayesian Neural Networks
 ----------------------
