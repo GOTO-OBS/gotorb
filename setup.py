@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='gotorb',
-    version='0.8',
+    version='1.0',
     author='Thomas Killestein',
     description='create labelled datasets and train models to distinguish real/bogus detections',
     packages=['gotorb'],
