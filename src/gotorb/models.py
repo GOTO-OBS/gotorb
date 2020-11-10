@@ -156,40 +156,29 @@ def bayesian_vgg6_hyperparameterised(input_shape, dropout_prob, block1_size,
     :return: Uncompiled `keras` model instance.
     """
 
-    # Parse activation function
-    if activation == "ReLU":
-        activation = keras.layers.ReLU()
-    elif activation == "LeakyReLU":
-        activation = keras.layers.LeakyReLU()
-    elif activation == "ELU":
-        activation = keras.layers.ELU()
-    else:
-        raise ValueError("Activation not specified")
-
-
     model = keras.models.Sequential(name='bayesian_vgg6_hyperparam')
     model.add(keras.layers.Conv2D(block1_size, (kern_size, kern_size), input_shape=input_shape, name='conv1',
                                   kernel_regularizer=keras.regularizers.l2(regulariser_strength),
                                   kernel_initializer=initialiser))
-    model.add(activation)
+    model.add(parse_activ_function(activation))
     model.add(keras.layers.SpatialDropout2D(dropout_prob))
     model.add(keras.layers.Conv2D(block1_size, (kern_size, kern_size), name='conv2',
                                   kernel_regularizer=keras.regularizers.l2(regulariser_strength),
                                   kernel_initializer=initialiser))
     model.add(keras.layers.SpatialDropout2D(dropout_prob))
     model.add(keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid'))
-    model.add(activation)
+    model.add(parse_activ_function(activation))
 
     model.add(keras.layers.Conv2D(block2_size, (kern_size, kern_size), name='conv3',
                                   kernel_regularizer=keras.regularizers.l2(regulariser_strength),
                                   kernel_initializer=initialiser))
-    model.add(activation)
+    model.add(parse_activ_function(activation))
     model.add(keras.layers.SpatialDropout2D(dropout_prob))
     model.add(keras.layers.Conv2D(block2_size, (kern_size, kern_size), name='conv4',
                                   kernel_regularizer=keras.regularizers.l2(regulariser_strength),
                                   kernel_initializer=initialiser))
     model.add(keras.layers.MaxPooling2D(pool_size=(4, 4), padding='valid'))
-    model.add(activation)
+    model.add(parse_activ_function(activation))
 
     model.add(keras.layers.Flatten())
     model.add(keras.layers.Dropout(dropout_prob)) # use regular dropout after flatten to reduce complexity.
@@ -197,7 +186,7 @@ def bayesian_vgg6_hyperparameterised(input_shape, dropout_prob, block1_size,
     model.add(keras.layers.Dense(fc_size, name='fc_1',
                                  activity_regularizer=keras.regularizers.l2(regulariser_strength),
                                  kernel_initializer=initialiser))
-    model.add(activation)
+    model.add(parse_activ_function(activation))
     model.add(keras.layers.Dropout(dropout_prob))
 
     model.add(keras.layers.Dense(1, activation='sigmoid', name='fc_out'))
@@ -222,3 +211,24 @@ def compat_build_hp_model(dropout_prob, block1_size, block2_size, fc_size, initi
                                                           activation=activation)
 
     return proto
+
+def parse_activ_function(activation_str):
+    """
+    Generate an activation layer based on the activation string provided.
+    Necessary to support the advanced activations that can't be passed to other layers
+
+    :param activation_str: string descriptor for activation function (ReLU, LeakyReLU, ELU)
+    :return: `keras.layers` instance to pass to `model.add()`
+    """
+
+    # Parse activation function
+    if activation_str == "ReLU":
+        activation = keras.layers.ReLU()
+    elif activation_str == "LeakyReLU":
+        activation = keras.layers.LeakyReLU()
+    elif activation_str == "ELU":
+        activation = keras.layers.ELU()
+    else:
+        raise ValueError("Activation not specified")
+
+    return activation
