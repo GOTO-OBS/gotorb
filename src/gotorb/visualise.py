@@ -6,6 +6,7 @@ from multiprocessing.pool import Pool
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from PIL import Image
 from PIL import ImageDraw
 from astropy.coordinates import SkyCoord
@@ -17,6 +18,9 @@ from astropy.wcs import WCS
 from gotorb import label_data
 from gotorb.classifier import dropout_pred
 from gotorb.utils import rb_colourmap
+
+from src.gotorb.label_data import get_individual_images, _get_stamps
+from src.gotorb.utils import gotophoto_connection, work_to_storage_filepath
 
 LOGGING_FORMAT = '%(asctime)s  %(levelname)-10s %(processName)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=LOGGING_FORMAT)
@@ -362,3 +366,53 @@ def scale_array_for_jpg(array):
     scaled_array = np.clip(array, low, upp)
     mi, ma = np.nanmin(scaled_array), np.nanmax(scaled_array)
     return ((scaled_array - mi) / (ma - mi) * ((2 << 7) - 1)).astype(np.uint8)
+
+
+def get_candidate_data(candidateid, stampsize):
+    print('creating stamps for candidate id {}'.format(candidateid))
+    query = ("select * from candidate join image on candidate.image_id = image.id "
+             "where candidate.id = %s")
+    with gotophoto_connection() as conn:
+        row = pd.read_sql(query, conn, params=(candidateid,))
+        if len(row) != 1:
+            print("Got {} results for candidate id {}".format(len(row), candidateid))
+            return
+    row = row.iloc[0]
+    fits_filepath = work_to_storage_filepath(row.filepath)
+    try:
+        fits_file = fits.open(fits_filepath)
+    except FileNotFoundError:
+        try:
+            fits_file = fits.open(fits_filepath.replace("gotodata2", "gotodata3"))
+        except FileNotFoundError:
+            print("couldn't find {}".format(fits_filepath))
+            return
+
+    indiv_images_df = get_individual_images(row.relatedimage)
+    try:
+        indiv_fits_files = [fits.open(work_to_storage_filepath(row.filepath)) for _, row in indiv_images_df.iterrows()]
+    except FileNotFoundError:
+        try:
+            indiv_fits_files = [fits.open(work_to_storage_filepath(row.filepath).replace("gotodata2", "gotodata3"))
+                                for _, row in indiv_images_df.iterrows()]
+        except FileNotFoundError:
+            print("couldn't find an individual file for {}".format(row.filepath))
+            return
+
+    stamps = _get_stamps(fits_file, row.ra, row.dec, stampsize, indiv_fits_files)
+    label = pd.Series(dict(
+        image_id=row.image_id,
+        x=row.x,
+        y=row.y,
+        ra=row.ra,
+        dec=row.dec,
+        mag=row.mag,
+        fwhm=row.fwhm,
+        index=candidateid,
+        realbogus=row.realbogus,
+        fits_filepath=fits_filepath,
+        ut=int(row.instrument[-1]),
+        ncoadd=len(indiv_fits_files),
+        label=-1  # unknown
+    ))
+    return label, stamps
