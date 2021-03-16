@@ -1,7 +1,9 @@
 gotorb
 ==============
 
-create labelled data sets and train models to distinguish real/bogus detections in difference images
+Create labelled data sets and train models to distinguish real/bogus detections in difference images. 
+
+For more in-depth information including performance characterisation see our accompanying paper, [Transient-optimised real-bogus classification with Bayesian Convolutional Neural Networks -- sifting the GOTO candidate stream](https://arxiv.org/abs/2102.09892) (available via arXiv)
 
 Installation and setup
 ----------------------
