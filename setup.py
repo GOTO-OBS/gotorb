@@ -11,7 +11,7 @@ setuptools.setup(
     packages=['gotorb'],
     package_dir={'gotorb': 'src/gotorb'},
     install_requires=[
-        "tensorflow==2.1.0",
+        "tensorflow>=2.1.0",
         "scikit-learn~=0.21",
         "pandas>=0.25.1",
         "psycopg2-binary==2.8.3",
